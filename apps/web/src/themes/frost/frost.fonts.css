@@ -1,0 +1,20 @@
+/* Frost fonts, imported via src/astryx-themes.ts (`astryx theme add frost`).
+   Host Grotesk is self-hosted from ./fonts (SIL OFL 1.1, see fonts/OFL.txt;
+   source: https://github.com/google/fonts/tree/main/ofl/hostgrotesk).
+   Never load fonts through a remote @import: Next.js drops it, and self-hosting
+   keeps visitors from contacting Google. */
+@font-face {
+  font-family: 'Host Grotesk';
+  src: url('./fonts/HostGrotesk-Variable.ttf') format('truetype');
+  font-weight: 300 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Host Grotesk';
+  src: url('./fonts/HostGrotesk-Italic-Variable.ttf') format('truetype');
+  font-weight: 300 800;
+  font-style: italic;
+  font-display: swap;
+}
