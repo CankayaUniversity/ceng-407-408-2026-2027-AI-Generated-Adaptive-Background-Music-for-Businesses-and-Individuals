@@ -123,6 +123,7 @@ The strategy is **GitHub Flow**, chosen by the project team.
   - `fix/<scope>-<short-desc>`: bug fixes
   - `docs/...`, `chore/...`, `refactor/...`, `test/...`, `ci/...`
   - `<scope>` is `web`, `api`, `infra`, `docs` or `repo`.
+  - Tool-named prefixes such as `codex/` or `claude/` are not allowed.
 - Push early and open a pull request against `main`. A PR must have:
   - a description of what and why, with the issue linked if there is one;
   - green CI;
@@ -154,6 +155,8 @@ The strategy is **GitHub Flow**, chosen by the project team.
   Agent-Role: coder
   ```
 
+- No AI tool (Claude, Codex or any other) may appear as an author, committer or contributor.
+  Never add `Co-Authored-By` or other AI attribution trailers or signatures to commits or PRs.
 - Never commit secrets, the `secrets/` folder, `.env` files, build output, `node_modules`, `.next`, virtualenvs or
   generated media. Keep `.gitignore` current.
 
