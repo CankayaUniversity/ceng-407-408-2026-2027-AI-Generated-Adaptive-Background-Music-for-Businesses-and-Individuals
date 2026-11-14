@@ -24,28 +24,6 @@ jobs:
     defaults:
       run:
         working-directory: apps/api
-    env:
-      # CI needs no secrets/ files: the app falls back to these variables (see core/config.py).
-      # The password is a throwaway for the ephemeral service container below, not a real secret.
-      POSTGRES_PASSWORD: ci-throwaway-postgres-password
-      APP_DB_HOST: 127.0.0.1
-      APP_DB_PORT: "5432"
-      APP_DB_USER: music
-      APP_DB_NAME: music
-    services:
-      postgres:
-        image: postgres:18
-        env:
-          POSTGRES_USER: music
-          POSTGRES_DB: music
-          POSTGRES_PASSWORD: ci-throwaway-postgres-password
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U music -d music"
-          --health-interval 5s
-          --health-timeout 3s
-          --health-retries 10
     steps:
       - uses: actions/checkout@v5
 
@@ -56,12 +34,6 @@ jobs:
 
       - name: Install dependencies
         run: uv sync --locked
-
-      - name: Create a throwaway encryption key
-        run: |
-          key="$(uv run python -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())')"
-          echo "::add-mask::$key"
-          echo "APP_ENCRYPTION_KEYS=$key" >> "$GITHUB_ENV"
 
       - name: Ruff check
         run: uv run ruff check .

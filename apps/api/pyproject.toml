@@ -5,18 +5,10 @@ description = "FastAPI service and background worker for adaptive background mus
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "aioboto3>=13",
-    "alembic>=1.14",
-    "cryptography>=44",
     "elevenlabs>=2",
     "fastapi>=0.115",
     "openai>=1.60",
-    "procrastinate>=3",
-    "psycopg[binary,pool]>=3.2",
-    "pydantic-settings>=2.7",
     "python-multipart>=0.0.20",
-    "sqlalchemy[asyncio]>=2.0.36",
-    "typer>=0.15",
     "uvicorn[standard]>=0.34",
 ]
 
@@ -46,7 +38,7 @@ src = ["src", "tests"]
 select = ["E", "F", "I", "UP", "B", "RUF"]
 
 [tool.pyright]
-include = ["src", "tests", "alembic"]
+include = ["src", "tests"]
 pythonVersion = "3.13"
 typeCheckingMode = "standard"
 
