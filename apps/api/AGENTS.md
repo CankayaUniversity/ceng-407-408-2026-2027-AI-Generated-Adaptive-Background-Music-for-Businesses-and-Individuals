@@ -77,11 +77,11 @@ These keep the code easy to change. Break one only with a reason worth writing d
 - **Features own their data.** A feature that needs another feature's data asks that feature's service instead of querying its tables, e.g. the mood-distance SQL stays in `music/library/`. Import other features by module (`from app.mood.analysis import service as analysis_service`).
 - **Dependencies point one way.** `mood/sessions` triggers `music`; `music` uses only `mood/vector.py` from `mood`. This avoids import cycles.
 - **Providers stay behind clients.** Business code talks to `clients/`, never to an SDK directly, and avoids provider-only features so a switch stays an admin change.
-- **Tests mirror the source.** Unit tests replace `clients/` with fakes through `dependency_overrides`; database tests use the Postgres 18 from `compose.yaml`.
+- **Tests mirror the source.** Unit tests replace `clients/` with fakes through `dependency_overrides`; database tests use the Postgres 18 from `docker-compose.yaml`.
 
 ## Configuration
 
-Every setting and secret is edited by an admin in the web app and stored in Postgres, with secrets encrypted. Only two **secrets** come from outside, as Docker secret files in `/run/secrets/` in every environment: `postgres_password` and `app_encryption_keys`. The non-secret database host, port, user and name are plain `environment:` entries in `compose.yaml`. Locally, `infra/init-secrets.sh` creates the secret files in the git-ignored `secrets/` folder, plus `seaweedfs_s3_config.json` for SeaweedFS; the admin copies the S3 keys from that file into the web app during setup.
+Every setting and secret is edited by an admin in the web app and stored in Postgres, with secrets encrypted. Only two **secrets** come from outside, as Docker secret files in `/run/secrets/` in every environment: `postgres_password` and `app_encryption_keys`. The non-secret database host, port, user and name are plain `environment:` entries in `docker-compose.yaml`. Locally, `infra/init-secrets.sh` creates the secret files in the git-ignored `secrets/` folder, plus `seaweedfs_s3_config.json` for SeaweedFS; the admin copies the S3 keys from that file into the web app during setup.
 
 How it is meant to work:
 
