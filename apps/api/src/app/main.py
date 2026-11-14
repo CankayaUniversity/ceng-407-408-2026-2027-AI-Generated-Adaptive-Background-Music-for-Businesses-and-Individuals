@@ -5,12 +5,14 @@ from fastapi import FastAPI
 from app.core.exceptions import register_exception_handlers
 from app.core.logging import setup_logging
 from app.core.schemas import HealthResponse
+from app.mood.router import router as mood_router
 
 
 def create_app() -> FastAPI:
     setup_logging()
     app = FastAPI(title="Adaptive Music API")
     register_exception_handlers(app)
+    app.include_router(mood_router)
 
     @app.get("/healthz", tags=["health"])
     async def healthz() -> HealthResponse:
