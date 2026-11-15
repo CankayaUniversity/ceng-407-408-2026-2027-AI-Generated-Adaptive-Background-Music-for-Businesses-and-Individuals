@@ -4,8 +4,8 @@ import '@astryxdesign/core/astryx.css';
 import {Providers} from './providers';
 
 export const metadata: Metadata = {
-  title: 'Adaptive Music',
-  description: 'Image-to-music playlists and personal streaming.',
+  title: 'Moodtrack',
+  description: 'AI-generated background music that adapts to your venue’s atmosphere.',
 };
 
 export default function RootLayout({children}: LayoutProps<'/'>) {
