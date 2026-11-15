@@ -17,7 +17,8 @@ const STOPS = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80,
 // Families: [id, peak chroma, hue]. Chroma tapers to 0 at black and white.
 const FAMILIES = [
   ['slate', 0.016, 250], // surfaces, text, borders: barely-there blue-grey
-  ['steel', 0.05, 248], // accent: muted light-blue / steel
+  ['steel', 0.05, 248], // muted light-blue / steel (kept for subtle accents)
+  ['azure', 0.2, 262], // accent: clear, saturated blue
 ];
 
 // --- sRGB <-> OKLab (Björn Ottosson) ---------------------------------------

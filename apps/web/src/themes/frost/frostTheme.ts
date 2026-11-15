@@ -3,7 +3,7 @@
  *
  * Inherits everything from Neutral (Figtree type, motion, radius, icons,
  * status colours, component overrides) and only re-points the grey roles at
- * the `slate` ramp and the accent at the muted `steel` ramp. Both ramps keep
+ * the `slate` ramp and the accent at the `azure` blue ramp. All ramps keep
  * Neutral's lightness per stop, so contrast is unchanged.
  *
  * Edit, then rebuild: `npm run theme:build` (writes frost.css / frost.js).
@@ -12,7 +12,7 @@ import {defineTheme} from '@astryxdesign/core/theme';
 import {neutralTheme} from '@astryxdesign/theme-neutral';
 import {frostPalette} from './frostPalette.generated';
 
-const {slate, steel} = frostPalette;
+const {slate, steel, azure} = frostPalette;
 const L = slate.light;
 const D = slate.dark;
 const a = (color: string, alpha: string) => `${color}${alpha}`;
@@ -49,11 +49,12 @@ export const frostTheme = defineTheme({
     '--color-background-popover': [L[100], D[10]],
     '--color-background-muted': [L[95], D[10]],
 
-    // Accent: muted steel blue instead of Neutral's near-black / near-white
-    '--color-accent': [steel.light[30], steel.dark[85]],
+    // Accent: clear azure blue instead of Neutral's near-black / near-white.
+    // Stop 40 keeps white text on the accent above 4.5:1 contrast.
+    '--color-accent': [azure.light[40], azure.dark[75]],
     '--color-accent-muted': [steel.light[90], steel.dark[30]],
-    '--color-text-accent': [steel.light[30], steel.dark[85]],
-    '--color-icon-accent': [steel.light[30], steel.dark[85]],
+    '--color-text-accent': [azure.light[40], azure.dark[75]],
+    '--color-icon-accent': [azure.light[40], azure.dark[75]],
     '--color-on-accent': [L[100], D[5]],
     '--color-neutral': [a(L[0], '0F'), a(D[100], '1A')],
 
