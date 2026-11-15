@@ -14,10 +14,10 @@ import {
   BackwardIcon,
   EllipsisHorizontalIcon,
   ForwardIcon,
-  HeartIcon,
   SpeakerWaveIcon,
 } from '@heroicons/react/24/outline';
-import {HeartIcon as HeartIconSolid, PauseIcon, PlayIcon} from '@heroicons/react/24/solid';
+import {PauseIcon, PlayIcon} from '@heroicons/react/24/solid';
+import {FavoriteIcon} from './FavoriteIcon';
 import {MoodArt} from '../mood/MoodArt';
 import {formatDuration, type Track} from './types';
 import {volumeIcon} from './VolumeIcon';
@@ -73,12 +73,7 @@ export function NowPlayingCard({track, startAtSec = 78}: {track: Track; startAtS
                   <IconButton
                     label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
                     variant="ghost"
-                    icon={
-                      <Icon
-                        icon={isFavorite ? HeartIconSolid : HeartIcon}
-                        color={isFavorite ? 'red' : 'inherit'}
-                      />
-                    }
+                    icon={<FavoriteIcon isFavorite={isFavorite} />}
                     onClick={() => setIsFavorite(f => !f)}
                   />
                   <IconButton

@@ -27,8 +27,9 @@ import {
   useTableSortableState,
 } from '@astryxdesign/core/Table';
 import type {TableColumn, TableSortComparator} from '@astryxdesign/core/Table';
-import {HeartIcon, MagnifyingGlassIcon, QueueListIcon} from '@heroicons/react/24/outline';
-import {HeartIcon as HeartIconSolid, PlayIcon} from '@heroicons/react/24/solid';
+import {MagnifyingGlassIcon, QueueListIcon} from '@heroicons/react/24/outline';
+import {PlayIcon} from '@heroicons/react/24/solid';
+import {FavoriteIcon} from '../player/FavoriteIcon';
 import {MoodArt} from '../mood/MoodArt';
 import {describeValue} from '../mood/axisMeaning';
 import {formatDuration} from '../player/types';
@@ -270,7 +271,7 @@ export function MusicHistoryScreen() {
               label={isFavorite ? `Remove ${r.track.title} from favorites` : `Add ${r.track.title} to favorites`}
               size="sm"
               variant="ghost"
-              icon={<Icon icon={isFavorite ? HeartIconSolid : HeartIcon} color={isFavorite ? 'red' : 'inherit'} />}
+              icon={<FavoriteIcon isFavorite={isFavorite} />}
               onClick={() => toggleFavorite(r.track.id)}
             />
             <IconButton
@@ -331,24 +332,19 @@ export function MusicHistoryScreen() {
               </MetadataList>
             </VStack>
 
-            <HStack gap={3} vAlign="center" hAlign="between" wrap="wrap">
-              <HStack gap={3} vAlign="center" wrap="wrap">
-                <SegmentedControl label="Show" value={scope} onChange={v => setScope(v as Scope)}>
-                  <SegmentedControlItem value="playlists" label="Playlists" />
-                  <SegmentedControlItem value="tracks" label="Songs" />
-                </SegmentedControl>
-                <Selector
-                  label="Started by"
-                  isLabelHidden
-                  options={SOURCE_OPTIONS}
-                  value={source}
-                  onChange={v => setSource(v as PlaylistSource | 'all')}
-                  width={180}
-                />
-                {scope === 'tracks' && (
-                  <Switch label="Favorites only" value={favoritesOnly} onChange={setFavoritesOnly} />
-                )}
-              </HStack>
+            <HStack gap={3} vAlign="center" wrap="wrap">
+              <SegmentedControl label="Show" value={scope} onChange={v => setScope(v as Scope)}>
+                <SegmentedControlItem value="playlists" label="Playlists" />
+                <SegmentedControlItem value="tracks" label="Songs" />
+              </SegmentedControl>
+              <Selector
+                label="Started by"
+                isLabelHidden
+                options={SOURCE_OPTIONS}
+                value={source}
+                onChange={v => setSource(v as PlaylistSource | 'all')}
+                width={180}
+              />
               <VStack width={280}>
                 <TextInput
                   label={scope === 'playlists' ? 'Search playlists' : 'Search songs'}
@@ -359,6 +355,9 @@ export function MusicHistoryScreen() {
                   startIcon={<Icon icon={MagnifyingGlassIcon} size="sm" />}
                 />
               </VStack>
+              {scope === 'tracks' && (
+                <Switch label="Favorites only" value={favoritesOnly} onChange={setFavoritesOnly} />
+              )}
             </HStack>
 
             {isEmpty ? (
