@@ -82,7 +82,14 @@ export function MoodHistoryCard({history}: {history: MoodHistoryPoint[]}) {
               </linearGradient>
             </defs>
             <CartesianGrid vertical={false} stroke="var(--color-border)" />
-            <XAxis dataKey="time" tick={tick} axisLine={false} tickLine={false} interval={1} />
+            <XAxis
+              dataKey="time"
+              tick={tick}
+              axisLine={false}
+              tickLine={false}
+              interval={1}
+              tickMargin={10}
+            />
             <YAxis
               domain={[-1, 1]}
               ticks={[-1, -0.5, 0, 0.5, 1]}
@@ -90,7 +97,9 @@ export function MoodHistoryCard({history}: {history: MoodHistoryPoint[]}) {
               tick={tick}
               axisLine={false}
               tickLine={false}
-              width={axis === 'texture' ? 104 : 84}
+              // Space between the labels and the plot; the width grows by the same amount.
+              tickMargin={16}
+              width={axis === 'texture' ? 124 : 100}
             />
             <Tooltip
               content={<HistoryTooltip axis={axis} />}
