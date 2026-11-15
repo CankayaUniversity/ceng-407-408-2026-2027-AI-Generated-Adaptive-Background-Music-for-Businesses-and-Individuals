@@ -6,17 +6,17 @@ import {Icon} from '@astryxdesign/core/Icon';
 import {Avatar} from '@astryxdesign/core/Avatar';
 import {HStack, VStack} from '@astryxdesign/core/Layout';
 import {Text} from '@astryxdesign/core/Text';
+import {ChevronUpDownIcon} from '@heroicons/react/24/outline';
 import {
-  HomeIcon,
-  SparklesIcon,
-  BuildingStorefrontIcon,
-  ClockIcon,
-  Square3Stack3DIcon,
-  Cog6ToothIcon,
-  QuestionMarkCircleIcon,
-  ChevronUpDownIcon,
-  MusicalNoteIcon as MusicalNoteIconOutline,
-} from '@heroicons/react/24/outline';
+  NavGenerateIcon,
+  NavHelpIcon,
+  NavHistoryIcon,
+  NavHomeIcon,
+  NavMoodIcon,
+  NavPlanIcon,
+  NavSettingsIcon,
+  NavVenueIcon,
+} from './navIcons';
 import {
   HomeIcon as HomeIconSolid,
   SparklesIcon as SparklesIconSolid,
@@ -30,37 +30,22 @@ import {
 import {currentVenue} from '../features/dashboard/mockData';
 
 const mainItems = [
-  {label: 'Home', href: '/', icon: HomeIcon, selectedIcon: HomeIconSolid},
-  {
-    label: 'Generate',
-    href: '/generate',
-    icon: MusicalNoteIconOutline,
-    selectedIcon: MusicalNoteIcon,
-  },
-  {label: 'Mood Analysis', href: '/mood', icon: SparklesIcon, selectedIcon: SparklesIconSolid},
+  {label: 'Home', href: '/', icon: NavHomeIcon, selectedIcon: HomeIconSolid},
+  {label: 'Generate', href: '/generate', icon: NavGenerateIcon, selectedIcon: MusicalNoteIcon},
+  {label: 'Mood Analysis', href: '/mood', icon: NavMoodIcon, selectedIcon: SparklesIconSolid},
   {
     label: 'Venue Profile',
     href: '/venue',
-    icon: BuildingStorefrontIcon,
+    icon: NavVenueIcon,
     selectedIcon: BuildingStorefrontIconSolid,
   },
-  {label: 'Music History', href: '/history', icon: ClockIcon, selectedIcon: ClockIconSolid},
-  {
-    label: 'Plan & Usage',
-    href: '/plan',
-    icon: Square3Stack3DIcon,
-    selectedIcon: Square3Stack3DIconSolid,
-  },
+  {label: 'Music History', href: '/history', icon: NavHistoryIcon, selectedIcon: ClockIconSolid},
+  {label: 'Plan & Usage', href: '/plan', icon: NavPlanIcon, selectedIcon: Square3Stack3DIconSolid},
 ];
 
 const footerItems = [
-  {label: 'Settings', href: '/settings', icon: Cog6ToothIcon, selectedIcon: Cog6ToothIconSolid},
-  {
-    label: 'Help',
-    href: '/help',
-    icon: QuestionMarkCircleIcon,
-    selectedIcon: QuestionMarkCircleIconSolid,
-  },
+  {label: 'Settings', href: '/settings', icon: NavSettingsIcon, selectedIcon: Cog6ToothIconSolid},
+  {label: 'Help', href: '/help', icon: NavHelpIcon, selectedIcon: QuestionMarkCircleIconSolid},
 ];
 
 export function AppNav() {
