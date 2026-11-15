@@ -1,8 +1,15 @@
 # apps/api: agent guide
 
-FastAPI service and background worker. Read the root [AGENTS.md](../../AGENTS.md) first.
+FastAPI service. Read the root [AGENTS.md](../../AGENTS.md) first.
 
-Status: **planned, no code yet.** This file describes what the backend is meant to achieve and a proposed starting shape. It is a direction, not a final plan: adjust it when building shows a better way, and update this file when a choice is settled.
+Status: **the AI services exist and are tested; the rest is not built.** The API serves `GET /healthz`, `POST /mood/analysis`, `POST /music/prompts` and `POST /music/generate`, with unit tests. Everything else in the original plan (database, settings store, worker, storage, playlists, streaming, auth, admin, Docker image) is not built and was dropped from the current scope by the operator. The sections below describe the long-term direction unless they say otherwise; update this file when a choice is settled.
+
+## Current state
+
+- **Endpoints:** health check; image to mood vector, summary and tags; mood to 5..25 distinct song prompts; one prompt to MP3 bytes. See [README.md](README.md).
+- **Configuration is temporary and comes from environment variables** (`LLM_*`, `ELEVENLABS_*`), read in `clients/llm/config.py` and `clients/elevenlabs/config.py`. A missing required variable gives HTTP 503 "setup required". The admin settings store replaces this later.
+- **Tests:** `uv run pytest` runs the unit tests with fake clients. Tests marked `live` call real providers, are excluded by default and need the variables; run them with `uv run pytest -m live` only on purpose.
+- **Current tree:** `src/app/` holds `main.py`, `core/` (exceptions, logging, schemas), `mood/` (`vector.py`, `analysis/`), `music/` (`prompting/`, `generation/`) and `clients/` (`llm/`, `elevenlabs/`). There is no `worker.py`, `accounts/`, `admin/`, `clients/storage/`, `Dockerfile` or `alembic/`.
 
 ## Goals
 
@@ -12,9 +19,9 @@ Status: **planned, no code yet.** This file describes what the backend is meant 
 - **Secure by default.** Secrets are encrypted at rest, never shown back, never logged, and admin actions are audited.
 - **Testable.** External services can be replaced with fakes, and database tests run against the same Postgres as production.
 
-## Proposed layout
+## Proposed layout (long-term direction, not the current tree)
 
-The starting shape follows the package-per-feature style of [Netflix Dispatch](https://github.com/Netflix/dispatch) and [fastapi-best-practices](https://github.com/zhanymkanov/fastapi-best-practices). Features are grouped into areas (`mood/`, `music/`, `accounts/`, `admin/`). Shared pieces live in `core/`, as in FastAPI's [full-stack template](https://github.com/fastapi/full-stack-fastapi-template), and external services in `clients/`.
+The folders below that are missing from the current tree (see Current state) are planned, not built. The shape follows the package-per-feature style of [Netflix Dispatch](https://github.com/Netflix/dispatch) and [fastapi-best-practices](https://github.com/zhanymkanov/fastapi-best-practices). Features are grouped into areas (`mood/`, `music/`, `accounts/`, `admin/`). Shared pieces live in `core/`, as in FastAPI's [full-stack template](https://github.com/fastapi/full-stack-fastapi-template), and external services in `clients/`.
 
 ```text
 apps/api/
@@ -77,11 +84,13 @@ These keep the code easy to change. Break one only with a reason worth writing d
 - **Features own their data.** A feature that needs another feature's data asks that feature's service instead of querying its tables, e.g. the mood-distance SQL stays in `music/library/`. Import other features by module (`from app.mood.analysis import service as analysis_service`).
 - **Dependencies point one way.** `mood/sessions` triggers `music`; `music` uses only `mood/vector.py` from `mood`. This avoids import cycles.
 - **Providers stay behind clients.** Business code talks to `clients/`, never to an SDK directly, and avoids provider-only features so a switch stays an admin change.
-- **Tests mirror the source.** Unit tests replace `clients/` with fakes through `dependency_overrides`; database tests use the Postgres 18 from `compose.yaml`.
+- **Tests mirror the source.** Unit tests replace `clients/` with fakes through `dependency_overrides`. Once a database exists, its tests use the Postgres 18 from `docker-compose.yaml`.
 
 ## Configuration
 
-Every setting and secret is edited by an admin in the web app and stored in Postgres, with secrets encrypted. Only two **secrets** come from outside, as Docker secret files in `/run/secrets/` in every environment: `postgres_password` and `app_encryption_keys`. The non-secret database host, port, user and name are plain `environment:` entries in `compose.yaml`. Locally, `infra/init-secrets.sh` creates the secret files in the git-ignored `secrets/` folder, plus `seaweedfs_s3_config.json` for SeaweedFS; the admin copies the S3 keys from that file into the web app during setup.
+This section is the long-term direction. Today the settings come from environment variables (see Current state).
+
+Every setting and secret is edited by an admin in the web app and stored in Postgres, with secrets encrypted. Only two **secrets** come from outside, as Docker secret files in `/run/secrets/` in every environment: `postgres_password` and `app_encryption_keys`. The non-secret database host, port, user and name are plain `environment:` entries in `docker-compose.yaml`. Locally, `infra/init-secrets.sh` creates the secret files in the git-ignored `secrets/` folder, plus `seaweedfs_s3_config.json` for SeaweedFS; the admin copies the S3 keys from that file into the web app during setup.
 
 How it is meant to work:
 
@@ -108,7 +117,7 @@ With no admin yet, the API starts in setup mode and prints a one-time setup toke
 
 ## LLM and music providers
 
-The code never picks a provider or model; the admin does.
+The code never picks a provider or model; the operator does, today through environment variables and later through the admin settings.
 
 - **One LLM interface.** All LLM calls go through `clients/llm/` using the OpenAI Chat Completions API. The `llm` section holds `base_url`, `api_key` and a default `model`; each task (`mood.analysis`, `mood.sessions`, `music.prompting`) can override the model.
 - **Capabilities are settings, not code branches**, set globally or per task:
@@ -119,9 +128,13 @@ The code never picks a provider or model; the admin does.
 - **Images** go as OpenAI `image_url` parts with base64 data URLs; the connection test checks that the chosen mood model accepts images.
 - **Music.** The `elevenlabs` section holds `api_key`, `model_id` (required) and an optional `output_format` (blank means the API default).
 
+## Settled for now
+
+- **Background jobs:** not in scope. No queue (Procrastinate or otherwise) is used or chosen.
+- **Database access:** not in scope. SQLAlchemy and Alembic are not used.
+- **Settings store:** not used. Configuration is read from environment variables.
+
 ## Open questions
 
-- **Background jobs:** a Postgres-based queue (e.g. Procrastinate, no extra service) or ARQ with Redis.
-- **Database access:** SQLAlchemy with Alembic, as in both reference projects, or plain SQL with a small migration runner.
 - **User login:** session cookies (as already chosen for admins) or tokens for regular users, and whether to support an external identity provider.
 - **Secret binding:** keep Fernet, or move to AES-GCM with associated data (see Security goals).

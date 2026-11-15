@@ -30,7 +30,7 @@ new top-level folder.
 .
 ├── AGENTS.md                 # this file (CLAUDE.md and GEMINI.md point here)
 ├── README.md                 # human-facing overview and quick start
-├── compose.yaml              # postgres 18.6 + seaweedfs 4.53 (api, worker, web added later)
+├── docker-compose.yaml       # postgres 18.6 + seaweedfs 4.53 (api, worker, web added later)
 ├── secrets/                  # Docker secret files, git-ignored; created by infra/init-secrets.sh
 ├── apps/
 │   ├── web/                  # Next.js 16 (App Router) + React 19 + Astryx design system
