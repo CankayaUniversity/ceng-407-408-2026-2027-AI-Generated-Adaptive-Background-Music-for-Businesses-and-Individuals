@@ -7,7 +7,7 @@
  * a sortable Table, and an EmptyState when nothing matches.
  */
 
-import {useMemo, useState} from 'react';
+import {useEffect, useMemo, useRef, useState, type RefObject} from 'react';
 import {HStack, Layout, LayoutContent, StackItem, VStack} from '@astryxdesign/core/Layout';
 import {Heading, Text} from '@astryxdesign/core/Text';
 import {Button} from '@astryxdesign/core/Button';
@@ -19,6 +19,7 @@ import {SegmentedControl, SegmentedControlItem} from '@astryxdesign/core/Segment
 import {Selector} from '@astryxdesign/core/Selector';
 import {Switch} from '@astryxdesign/core/Switch';
 import {TextInput} from '@astryxdesign/core/TextInput';
+import {InputGroup, InputGroupText} from '@astryxdesign/core/InputGroup';
 import {
   Table,
   pixel,
@@ -56,6 +57,54 @@ const SOURCE_OPTIONS = [
 
 const time = (iso: string) => new Date(iso).getTime();
 
+/*
+ * The search field is an InputGroup (TextInput has no end icon). These styles
+ * drop the seam between the input and the magnifier so it reads as one box
+ * with an icon inside. TextInput's focus ring is an inset shadow on all four
+ * sides; while focused, both halves draw it on their outer sides only and the
+ * magnifier side takes the accent border, so the ring wraps the whole box.
+ */
+const RING = 'var(--color-accent-muted)';
+function searchControlStyle(isFocused: boolean) {
+  return {
+    borderInlineEndWidth: 0,
+    ...(isFocused && {
+      boxShadow: `inset 2px 0 0 0 ${RING}, inset 0 2px 0 0 ${RING}, inset 0 -2px 0 0 ${RING}`,
+    }),
+  };
+}
+function searchIconStyle(isFocused: boolean) {
+  return {
+    backgroundColor: 'var(--color-background-surface)',
+    borderInlineStartWidth: 0,
+    paddingInlineEnd: 'var(--spacing-3)',
+    ...(isFocused && {
+      borderColor: 'var(--color-accent)',
+      boxShadow: `inset -2px 0 0 0 ${RING}, inset 0 2px 0 0 ${RING}, inset 0 -2px 0 0 ${RING}`,
+    }),
+  };
+}
+
+/** Tracks focus on an input reached through a ref (TextInput has no onFocus prop). */
+function useFocusState(ref: RefObject<HTMLInputElement | null>) {
+  const [isFocused, setIsFocused] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) {
+      return;
+    }
+    const onFocus = () => setIsFocused(true);
+    const onBlur = () => setIsFocused(false);
+    el.addEventListener('focus', onFocus);
+    el.addEventListener('blur', onBlur);
+    return () => {
+      el.removeEventListener('focus', onFocus);
+      el.removeEventListener('blur', onBlur);
+    };
+  }, [ref]);
+  return isFocused;
+}
+
 const PLAYLIST_COMPARATORS: Partial<Record<string, TableSortComparator<PlaylistRecord>>> = {
   name: (a, b) => a.name.localeCompare(b.name),
   source: (a, b) => SOURCE_LABEL[a.source].localeCompare(SOURCE_LABEL[b.source]),
@@ -81,6 +130,8 @@ export function MusicHistoryScreen() {
     () => new Set(TRACK_RECORDS.filter(r => r.isFavorite).map(r => r.track.id)),
   );
   const [openPlaylistId, setOpenPlaylistId] = useState<string | null>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const isSearchFocused = useFocusState(searchRef);
 
   const toggleFavorite = (trackId: string) =>
     setFavorites(prev => {
@@ -346,14 +397,22 @@ export function MusicHistoryScreen() {
                 width={180}
               />
               <VStack width={280}>
-                <TextInput
-                  label={scope === 'playlists' ? 'Search playlists' : 'Search songs'}
-                  isLabelHidden
-                  value={query}
-                  onChange={setQuery}
-                  placeholder={scope === 'playlists' ? 'Search playlists…' : 'Search songs or prompts…'}
-                  startIcon={<Icon icon={MagnifyingGlassIcon} size="sm" />}
-                />
+                {/* InputGroup puts the magnifier at the end; TextInput only has a start icon. */}
+                <InputGroup label="Search" isLabelHidden>
+                  <TextInput
+                    label={scope === 'playlists' ? 'Search playlists' : 'Search songs'}
+                    isLabelHidden
+                    type="search"
+                    value={query}
+                    onChange={setQuery}
+                    placeholder={scope === 'playlists' ? 'Search playlists…' : 'Search songs or prompts…'}
+                    ref={searchRef}
+                    controlStyle={searchControlStyle(isSearchFocused)}
+                  />
+                  <InputGroupText style={searchIconStyle(isSearchFocused)}>
+                    <Icon icon={MagnifyingGlassIcon} size="sm" color="secondary" />
+                  </InputGroupText>
+                </InputGroup>
               </VStack>
               {scope === 'tracks' && (
                 <Switch label="Favorites only" value={favoritesOnly} onChange={setFavoritesOnly} />
