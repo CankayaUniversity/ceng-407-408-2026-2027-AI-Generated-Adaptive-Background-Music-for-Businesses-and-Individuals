@@ -432,6 +432,17 @@ export const frostTheme = {
       "base": {
         "padding": "var(--spacing-3)"
       }
+    },
+    "text-input": {
+      "base": {
+        "paddingInline": "var(--spacing-3)"
+      }
+    },
+    "text-area-control": {
+      "base": {
+        "paddingInline": "var(--spacing-3)",
+        "paddingBlock": "var(--spacing-2)"
+      }
     }
   },
   __onDark: {

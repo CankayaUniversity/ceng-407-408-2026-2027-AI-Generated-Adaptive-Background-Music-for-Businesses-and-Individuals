@@ -535,6 +535,15 @@
     --astryx-section-padding: var(--spacing-3);
   }
 
+  .astryx-text-input {
+    padding-inline: var(--spacing-3);
+  }
+
+  .astryx-text-area-control {
+    padding-inline: var(--spacing-3);
+    padding-block: var(--spacing-2);
+  }
+
   .astryx-text[data-color="primary"] { color: var(--color-text-primary); }
 
   .astryx-heading[data-color="primary"] { color: var(--color-text-primary); }

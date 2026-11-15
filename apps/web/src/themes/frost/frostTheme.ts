@@ -92,6 +92,13 @@ export const frostTheme = defineTheme({
 
   // Neutral lifts secondary text on selected fills; keep that, on the tinted ramp.
   components: {
+    // Field insets: text inputs and text areas get the same 12px inline padding
+    // as Selector, so typed text and placeholders start on one line across a
+    // form instead of sitting against the border.
+    'text-input': {base: {paddingInline: 'var(--spacing-3)'}},
+    'text-area-control': {
+      base: {paddingInline: 'var(--spacing-3)', paddingBlock: 'var(--spacing-2)'},
+    },
     item: {selected: {'--color-text-secondary': liftedSecondary}},
     'tree-list-item': {selected: {'--color-text-secondary': liftedSecondary}},
     'file-input': {'mode:dropzone': {'--color-text-secondary': liftedSecondary}},
