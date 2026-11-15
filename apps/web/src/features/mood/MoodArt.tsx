@@ -1,9 +1,9 @@
 'use client';
 
-import {useId} from 'react';
+import {useId, type ComponentType, type SVGProps} from 'react';
 import type {MoodVector} from './types';
 
-type Palette = 'blue' | 'shamrock' | 'yellow' | 'orange' | 'purple' | 'teal';
+export type Palette = 'blue' | 'shamrock' | 'yellow' | 'orange' | 'purple' | 'teal' | 'pink';
 
 /**
  * Picks a data palette for a mood, so every generated track gets cover art in
@@ -36,9 +36,21 @@ function tone(palette: Palette, step: 1 | 2 | 3 | 4) {
  * Generated tracks have no cover photo, so the cover is drawn: layered waves in
  * the mood's palette. Decorative; the track title next to it carries the meaning.
  */
-export function MoodArt({mood, size}: {mood: MoodVector; size: number}) {
+export function MoodArt({
+  mood,
+  size,
+  palette: paletteOverride,
+  icon: GlyphIcon,
+}: {
+  mood: MoodVector;
+  size: number;
+  /** Forces a colour, e.g. to tell parts of the day apart; otherwise it follows the mood. */
+  palette?: Palette;
+  /** Optional glyph drawn in the upper middle of the cover, e.g. a sun for mornings. */
+  icon?: ComponentType<SVGProps<SVGSVGElement>>;
+}) {
   const id = useId();
-  const palette = paletteForMood(mood);
+  const palette = paletteOverride ?? paletteForMood(mood);
   // Calmer moods get flatter waves.
   const swell = 14 + Math.round((mood.energy + 1) * 8);
 
@@ -76,6 +88,10 @@ export function MoodArt({mood, size}: {mood: MoodVector; size: number}) {
           opacity="0.6"
         />
       </g>
+      {GlyphIcon && (
+        // Heroicons draw with currentColor, so the nested svg takes the palette's dark tone.
+        <GlyphIcon x={28} y={12} width={44} height={44} strokeWidth={2} style={{color: tone(palette, 4)}} />
+      )}
     </svg>
   );
 }

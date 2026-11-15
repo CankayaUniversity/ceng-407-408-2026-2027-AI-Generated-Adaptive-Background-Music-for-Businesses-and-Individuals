@@ -16,17 +16,9 @@ import {MoodMap} from '../MoodMap';
 import {SceneTiles} from '../SceneTiles';
 import {axisMeaning, describeValue} from '../axisMeaning';
 import type {MoodAnalysis, MoodAxis, MoodVector} from '../types';
+import {generateHref} from '../../generation/links';
 
 const axisOrder: MoodAxis[] = ['valence', 'energy', 'texture'];
-
-export function generateHref(mood: MoodVector) {
-  const params = new URLSearchParams({
-    valence: mood.valence.toFixed(2),
-    energy: mood.energy.toFixed(2),
-    texture: mood.texture.toFixed(2),
-  });
-  return `/generate?${params.toString()}`;
-}
 
 /** What the AI read, with sliders to fine-tune the mood before using it. */
 export function AnalysisResultCard({
