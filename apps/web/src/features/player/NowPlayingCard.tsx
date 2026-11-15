@@ -1,6 +1,6 @@
 'use client';
 
-import {useEffect, useState} from 'react';
+import {useEffect, useRef, useState} from 'react';
 import {Card} from '@astryxdesign/core/Card';
 import {HStack, VStack, StackItem} from '@astryxdesign/core/Layout';
 import {Heading} from '@astryxdesign/core/Heading';
@@ -20,6 +20,7 @@ import {
 import {HeartIcon as HeartIconSolid, PauseIcon, PlayIcon} from '@heroicons/react/24/solid';
 import {MoodArt} from '../mood/MoodArt';
 import {formatDuration, type Track} from './types';
+import {volumeIcon} from './VolumeIcon';
 
 /**
  * Soft white-to-blue wash behind the player. Built only from theme tokens, so it
@@ -38,6 +39,8 @@ export function NowPlayingCard({track, startAtSec = 78}: {track: Track; startAtS
   const [isPlaying, setIsPlaying] = useState(true);
   const [position, setPosition] = useState(startAtSec);
   const [volume, setVolume] = useState(70);
+  // The level to return to when unmuting.
+  const lastVolume = useRef(70);
   const [isFavorite, setIsFavorite] = useState(false);
   const [isShuffle, setIsShuffle] = useState(false);
   const [isRepeat, setIsRepeat] = useState(true);
@@ -145,8 +148,21 @@ export function NowPlayingCard({track, startAtSec = 78}: {track: Track; startAtS
               onClick={() => setIsRepeat(r => !r)}
             />
           </HStack>
-          <HStack gap={2} vAlign="center" width={180}>
-            <Icon icon={SpeakerWaveIcon} size="sm" color="secondary" />
+          <HStack gap={1} vAlign="center" width={200}>
+            <IconButton
+              label={volume === 0 ? 'Unmute' : 'Mute'}
+              variant="ghost"
+              size="sm"
+              icon={<Icon icon={volumeIcon(volume)} />}
+              onClick={() => {
+                if (volume === 0) {
+                  setVolume(lastVolume.current || 50);
+                } else {
+                  lastVolume.current = volume;
+                  setVolume(0);
+                }
+              }}
+            />
             <StackItem size="fill">
               <Slider
                 label="Volume"
