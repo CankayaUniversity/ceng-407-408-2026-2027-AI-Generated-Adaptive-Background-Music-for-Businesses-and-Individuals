@@ -1,10 +1,8 @@
 import type {ComponentType, SVGProps} from 'react';
 import {
-  BeakerIcon,
   BoltIcon,
   BuildingOffice2Icon,
   BuildingStorefrontIcon,
-  CakeIcon,
   CloudIcon,
   FireIcon,
   HomeIcon,
@@ -17,6 +15,7 @@ import {
   UserGroupIcon,
 } from '@heroicons/react/24/outline';
 import type {DaypartId, VenueProfile, VenueType} from './types';
+import {CocktailIcon, CoffeeCupIcon} from './VenueIcons';
 
 type IconComponent = ComponentType<SVGProps<SVGSVGElement>>;
 
@@ -26,9 +25,9 @@ export const VENUE_TYPES: Array<{
   description: string;
   icon: IconComponent;
 }> = [
-  {value: 'cafe', label: 'Café', description: 'Coffee, conversation, laptops', icon: CakeIcon},
+  {value: 'cafe', label: 'Café', description: 'Coffee, conversation, laptops', icon: CoffeeCupIcon},
   {value: 'restaurant', label: 'Restaurant', description: 'Lunch and dinner service', icon: BuildingStorefrontIcon},
-  {value: 'bar', label: 'Bar', description: 'Drinks, evenings, nightlife', icon: BeakerIcon},
+  {value: 'bar', label: 'Bar', description: 'Drinks, evenings, nightlife', icon: CocktailIcon},
   {value: 'shop', label: 'Shop', description: 'Retail and browsing', icon: ShoppingBagIcon},
   {value: 'office', label: 'Office', description: 'Focus and co-working', icon: BuildingOffice2Icon},
   {value: 'hotel', label: 'Hotel', description: 'Lobby, lounge, breakfast room', icon: KeyIcon},
