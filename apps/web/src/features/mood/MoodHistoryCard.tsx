@@ -10,63 +10,12 @@ import {Icon} from '@astryxdesign/core/Icon';
 import {Selector} from '@astryxdesign/core/Selector';
 import {ArrowTrendingUpIcon} from '@heroicons/react/24/outline';
 import type {MoodAxis, MoodHistoryPoint} from './types';
-
-/**
- * What each value on an axis means. Every axis runs from -1 to +1:
- * `low` is the -1 end, `high` the +1 end, and the ticks in between name the
- * steps, so the chart reads as words instead of bare numbers.
- */
-const axisMeaning: Record<
-  MoodAxis,
-  {label: string; low: string; high: string; ticks: Record<string, string>}
-> = {
-  energy: {
-    label: 'Energy',
-    low: 'calm',
-    high: 'energetic',
-    ticks: {'-1': 'Calm', '-0.5': 'Relaxed', '0': 'Neutral', '0.5': 'Lively', '1': 'Energetic'},
-  },
-  valence: {
-    label: 'Valence',
-    low: 'sad',
-    high: 'happy',
-    ticks: {'-1': 'Sad', '-0.5': 'Melancholic', '0': 'Neutral', '0.5': 'Upbeat', '1': 'Happy'},
-  },
-  texture: {
-    label: 'Texture',
-    low: 'acoustic',
-    high: 'electronic',
-    ticks: {
-      '-1': 'Acoustic',
-      '-0.5': 'More acoustic',
-      '0': 'Balanced',
-      '0.5': 'More electronic',
-      '1': 'Electronic',
-    },
-  },
-};
+import {axisMeaning, describeValue} from './axisMeaning';
 
 const axisOptions = (Object.keys(axisMeaning) as MoodAxis[]).map(value => ({
   value,
   label: axisMeaning[value].label,
 }));
-
-/** Puts a value into words, e.g. 0.30 on energy -> "slightly energetic". */
-export function describeValue(axis: MoodAxis, value: number): string {
-  const {low, high} = axisMeaning[axis];
-  const size = Math.abs(value);
-  if (size < 0.15) {
-    return axis === 'texture' ? 'balanced' : 'neutral';
-  }
-  const word = value > 0 ? high : low;
-  if (size < 0.5) {
-    return `slightly ${word}`;
-  }
-  if (size < 0.8) {
-    return word;
-  }
-  return `very ${word}`;
-}
 
 const tick = {fontSize: 'var(--font-size-sm)', fill: 'var(--color-text-secondary)'};
 

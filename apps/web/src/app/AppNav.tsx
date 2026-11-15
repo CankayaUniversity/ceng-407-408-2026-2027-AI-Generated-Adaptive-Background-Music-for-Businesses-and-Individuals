@@ -15,6 +15,7 @@ import {
   Cog6ToothIcon,
   QuestionMarkCircleIcon,
   ChevronUpDownIcon,
+  MusicalNoteIcon as MusicalNoteIconOutline,
 } from '@heroicons/react/24/outline';
 import {
   HomeIcon as HomeIconSolid,
@@ -30,6 +31,12 @@ import {currentVenue} from '../features/dashboard/mockData';
 
 const mainItems = [
   {label: 'Home', href: '/', icon: HomeIcon, selectedIcon: HomeIconSolid},
+  {
+    label: 'Generate',
+    href: '/generate',
+    icon: MusicalNoteIconOutline,
+    selectedIcon: MusicalNoteIcon,
+  },
   {label: 'Mood Analysis', href: '/mood', icon: SparklesIcon, selectedIcon: SparklesIconSolid},
   {
     label: 'Venue Profile',
