@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Adaptive Music Demo</title>
+  <style>
+    :root {
+      --bg: #121212;
+      --panel: #1c1c1e;
+      --line: #2c2c2e;
+      --text: #f2f2f2;
+      --muted: #9a9a9e;
+      --accent: #ffffff;
+      --error: #ff6b6b;
+      --radius: 10px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+    main { max-width: 960px; margin: 0 auto; padding: 24px 16px 120px; }
+    h1 { font-size: 22px; margin: 0 0 4px; }
+    h2 { font-size: 16px; margin: 0 0 12px; }
+    p.lead { color: var(--muted); margin: 0 0 24px; }
+    section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    section.todo { color: var(--muted); }
+    .step { color: var(--muted); font-weight: 400; font-size: 13px; }
+    .frames { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+    figure { margin: 0; }
+    figcaption { color: var(--muted); font-size: 13px; margin-top: 6px; }
+    video, img.snapshot {
+      display: block;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      background: #000;
+      border-radius: 8px;
+    }
+    img.snapshot[hidden] + .empty { display: grid; }
+    .empty {
+      display: none;
+      place-items: center;
+      aspect-ratio: 16 / 9;
+      border: 1px dashed var(--line);
+      border-radius: 8px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .actions { display: flex; align-items: center; gap: 12px; margin-top: 12px; flex-wrap: wrap; }
+    button {
+      background: var(--accent);
+      color: #000;
+      border: 0;
+      border-radius: 999px;
+      padding: 8px 20px;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:disabled { opacity: 0.4; cursor: default; }
+    #status { color: var(--muted); }
+    #status.error { color: var(--error); }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Adaptive Music Demo</h1>
+    <p class="lead">Venue photo → mood analysis → prompt planning → music generation → playback</p>
+
+    <section>
+      <h2>Venue photo <span class="step">step 1</span></h2>
+      <div class="frames">
+        <figure>
+          <video id="video" autoplay playsinline muted></video>
+          <figcaption>Live camera</figcaption>
+        </figure>
+        <figure>
+          <img id="snapshot" class="snapshot" alt="Captured frame" hidden>
+          <div class="empty">No snapshot yet</div>
+          <figcaption>Last snapshot</figcaption>
+        </figure>
+      </div>
+      <div class="actions">
+        <button id="capture" type="button" disabled>Capture</button>
+        <span id="status" role="status">Starting camera…</span>
+      </div>
+    </section>
+
+    <section class="todo">
+      <h2>Mood analysis <span class="step">step 2</span></h2>
+      Valence, texture and energy bars, summary and tags.
+    </section>
+
+    <section class="todo">
+      <h2>Prompt planning <span class="step">step 3</span></h2>
+      Five planned song prompts.
+    </section>
+
+    <section class="todo">
+      <h2>Last 5 songs <span class="step">step 4</span></h2>
+      Generated tracks, newest first.
+    </section>
+
+    <!-- Step 5: fixed bottom player bar. -->
+  </main>
+
+  <script>
+    const video = document.getElementById("video");
+    const snapshotImg = document.getElementById("snapshot");
+    const captureBtn = document.getElementById("capture");
+    const statusEl = document.getElementById("status");
+    const canvas = document.createElement("canvas");
+    let snapshotUrl = null;
+
+    function setStatus(text, isError = false) {
+      statusEl.textContent = text;
+      statusEl.classList.toggle("error", isError);
+    }
+
+    function cameraError(err) {
+      switch (err && err.name) {
+        case "NotAllowedError": return "Camera permission was denied. Allow it in the address bar and reload.";
+        case "NotFoundError": return "No camera was found.";
+        case "NotReadableError": return "The camera is in use by another app.";
+        default: return "Could not start the camera: " + (err && err.message ? err.message : err);
+      }
+    }
+
+    async function startCamera() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setStatus("The camera only works on http://localhost or HTTPS.", true);
+        return;
+      }
+      try {
+        video.srcObject = await navigator.mediaDevices.getUserMedia({
+          video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+          audio: false,
+        });
+        await video.play();
+        captureBtn.disabled = false;
+        setStatus("Camera ready.");
+      } catch (err) {
+        setStatus(cameraError(err), true);
+      }
+    }
+
+    function grabFrame() {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext("2d").drawImage(video, 0, 0);
+      return new Promise((resolve, reject) =>
+        canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("Could not encode the frame"))),
+          "image/jpeg", 0.9));
+    }
+
+    function showSnapshot(blob) {
+      if (snapshotUrl) URL.revokeObjectURL(snapshotUrl);
+      snapshotUrl = URL.createObjectURL(blob);
+      snapshotImg.src = snapshotUrl;
+      snapshotImg.hidden = false;
+    }
+
+    async function postImage(path, blob) {
+      const form = new FormData();
+      form.append("image", blob, "snapshot.jpg");
+      const res = await fetch(path, { method: "POST", body: form });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(typeof body.detail === "string" ? body.detail : `Request failed (HTTP ${res.status})`);
+      }
+      return body;
+    }
+
+    captureBtn.addEventListener("click", async () => {
+      if (!video.videoWidth) return;
+      captureBtn.disabled = true;
+      try {
+        const blob = await grabFrame();
+        showSnapshot(blob);
+        setStatus("Sending snapshot…");
+        const info = await postImage("/api/snapshot", blob);
+        setStatus(`Server received ${(info.size_bytes / 1024).toFixed(0)} KB (${info.media_type}).`);
+        // Step 2 continues the pipeline here with the same blob.
+      } catch (err) {
+        setStatus(err.message, true);
+      } finally {
+        captureBtn.disabled = false;
+      }
+    });
+
+    startCamera();
+  </script>
+</body>
+</html>

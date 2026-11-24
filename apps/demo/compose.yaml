@@ -1,0 +1,11 @@
+# Standalone demo: `docker compose up --build`, then open http://localhost:8000.
+# Keys come from .env at runtime; they are never copied into the image.
+services:
+  demo:
+    build: .
+    env_file:
+      - path: .env
+        required: false
+    ports:
+      # Localhost only: browsers allow the camera only on localhost or HTTPS anyway.
+      - "127.0.0.1:8000:8000"
