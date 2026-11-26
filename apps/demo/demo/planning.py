@@ -84,3 +84,53 @@ class PromptPlan(BaseModel):
                 shown = "; ".join(f"'{value[:60]}'" for value in repeated)
                 raise ValueError(f"every song needs its own {label}, but these repeat: {shown}")
         return self
+
+
+# Words for the two ends of each axis, shown next to the numbers in the request.
+_AXES = (
+    ("valence", "sad", "happy"),
+    ("texture", "acoustic", "electronic"),
+    ("energy", "calm", "energetic"),
+)
+
+
+def _strength(value: float) -> str:
+    """How far an axis value is from zero, in words."""
+    magnitude = abs(value)
+    if magnitude < 0.15:
+        return "neutral"
+    if magnitude < 0.45:
+        return "slightly"
+    if magnitude < 0.75:
+        return "clearly"
+    return "very"
+
+
+def describe_axis(value: float, low: str, high: str) -> str:
+    """One axis as text, for example "+0.60 (clearly happy)"."""
+    # round() then + 0.0 turns a stray -0.0 into 0.0, so the text never shows "-0.00".
+    shown = round(value, 2) + 0.0
+    strength = _strength(value)
+    if strength == "neutral":
+        return f"{shown:+.2f} (neutral between {low} and {high})"
+    return f"{shown:+.2f} ({strength} {high if value > 0 else low})"
+
+
+def _one_line(text: str) -> str:
+    """Put text on a single line, so it cannot fake extra lines in the request."""
+    return " ".join(text.split())
+
+
+def build_user_message(mood: Mood) -> str:
+    """The user message of the planning request: the mood as numbers, words, summary and tags."""
+    axes = "\n".join(
+        f"- {name}: {describe_axis(getattr(mood, name), low, high)}" for name, low, high in _AXES
+    )
+    summary = _one_line(mood.summary) or "(none)"
+    tags = ", ".join(_one_line(tag) for tag in mood.tags) or "(none)"
+    return (
+        f"Plan {PLAN_SIZE} songs for this mood.\n\n"
+        f"Mood axes (each from -1 to 1):\n{axes}\n\n"
+        f"Summary: {summary}\n"
+        f"Tags: {tags}"
+    )
