@@ -6,11 +6,16 @@ rule, the error text is sent back to the LLM once so it can fix itself, so the m
 written for the model to read.
 """
 
-from typing import Annotated, Self
+from pathlib import Path
+from typing import Annotated, Protocol, Self
 
 from pydantic import BaseModel, Field, StringConstraints, model_validator
 
 PLAN_SIZE = 5
+
+# The system prompt of the planning request. It is read on every call, so an edit to the file
+# shows up at once while tuning it, without restarting the server.
+PROMPT_PATH = Path(__file__).parent / "prompts" / "plan.md"
 
 # Our own limits for background music: one to five minutes. ElevenLabs Music itself accepts
 # 3 000 to 600 000 ms, so every length that passes here is accepted there too. prompts/plan.md
@@ -134,3 +139,20 @@ def build_user_message(mood: Mood) -> str:
         f"Summary: {summary}\n"
         f"Tags: {tags}"
     )
+
+
+class AskJson(Protocol):
+    """The LLM helper that llm.py provides: texts in, an answer that follows ``schema`` out."""
+
+    async def __call__(self, schema: type[PromptPlan], *, system: str, user: str) -> PromptPlan: ...
+
+
+async def plan_prompts(mood: Mood, ask_json: AskJson) -> PromptPlan:
+    """Ask the LLM for five song prompts that fit the mood.
+
+    ``ask_json`` sends the two texts to the model, checks the answer against the PromptPlan rules
+    and asks again once when a rule is broken. It is passed in, not imported, so this function can
+    be tried with a fake and does not need llm.py to exist.
+    """
+    system = PROMPT_PATH.read_text(encoding="utf-8")
+    return await ask_json(PromptPlan, system=system, user=build_user_message(mood))
