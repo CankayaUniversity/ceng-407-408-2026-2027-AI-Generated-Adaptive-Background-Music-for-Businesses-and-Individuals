@@ -46,6 +46,8 @@
       background: #000;
       border-radius: 8px;
     }
+    /* display: block above would otherwise override the hidden attribute. */
+    img.snapshot[hidden] { display: none; }
     img.snapshot[hidden] + .empty { display: grid; }
     .empty {
       display: none;
