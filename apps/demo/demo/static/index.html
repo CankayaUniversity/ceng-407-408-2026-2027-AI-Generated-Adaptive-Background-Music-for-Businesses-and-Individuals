@@ -79,6 +79,39 @@
     ol.plan .title { font-weight: 600; }
     ol.plan .meta { color: var(--muted); font-size: 13px; margin-left: 8px; }
     ol.plan p { margin: 6px 0 0; }
+    .axes { display: grid; gap: 14px; margin-top: 4px; }
+    .axes[hidden], #mood-details[hidden] { display: none; }
+    .axis-head { display: flex; justify-content: space-between; font-size: 13px; }
+    .axis-head .value { color: var(--muted); font-variant-numeric: tabular-nums; }
+    .track {
+      position: relative;
+      height: 8px;
+      margin: 6px 0 4px;
+      background: var(--line);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    /* The bar grows from the middle: left for negative values, right for positive ones. */
+    .track::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: -2px;
+      bottom: -2px;
+      width: 1px;
+      background: var(--muted);
+    }
+    .fill { position: absolute; top: 0; bottom: 0; background: var(--accent); border-radius: 999px; }
+    .ends { display: flex; justify-content: space-between; color: var(--muted); font-size: 12px; }
+    #mood-summary { margin: 16px 0 8px; }
+    .tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+    .tags li {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 2px 10px;
+      font-size: 13px;
+      color: var(--muted);
+    }
   </style>
 </head>
 <body>
@@ -105,9 +138,14 @@
       </div>
     </section>
 
-    <section class="todo">
+    <section>
       <h2>Mood analysis <span class="step">step 2</span></h2>
-      Valence, texture and energy bars, summary and tags.
+      <p id="mood-empty" class="muted">Capture a snapshot to analyse the mood.</p>
+      <div id="mood-axes" class="axes" hidden></div>
+      <div id="mood-details" hidden>
+        <p id="mood-summary"></p>
+        <ul id="mood-tags" class="tags"></ul>
+      </div>
     </section>
 
     <section>
@@ -195,16 +233,77 @@
       return body;
     }
 
+    // ---- Step 2: mood --------------------------------------------------------
+    const moodAxes = document.getElementById("mood-axes");
+    const moodDetails = document.getElementById("mood-details");
+    const moodEmpty = document.getElementById("mood-empty");
+    const MOOD_AXES = [
+      { key: "valence", low: "sad", high: "happy" },
+      { key: "texture", low: "acoustic", high: "electronic" },
+      { key: "energy", low: "calm", high: "energetic" },
+    ];
+    let lastMood = null;
+
+    function axisRow({ key, low, high }, value) {
+      const row = document.createElement("div");
+      const head = document.createElement("div");
+      head.className = "axis-head";
+      const name = document.createElement("span");
+      name.textContent = key;
+      const shown = document.createElement("span");
+      shown.className = "value";
+      shown.textContent = (value > 0 ? "+" : "") + value.toFixed(2);
+      head.append(name, shown);
+
+      const track = document.createElement("div");
+      track.className = "track";
+      const fill = document.createElement("div");
+      fill.className = "fill";
+      // -1 … 1 maps to 0 … 100 %; the fill spans from the middle to the value.
+      const pos = ((Math.max(-1, Math.min(1, value)) + 1) / 2) * 100;
+      fill.style.left = `${Math.min(pos, 50)}%`;
+      fill.style.width = `${Math.abs(pos - 50)}%`;
+      track.append(fill);
+
+      const ends = document.createElement("div");
+      ends.className = "ends";
+      const lowEl = document.createElement("span");
+      lowEl.textContent = low;
+      const highEl = document.createElement("span");
+      highEl.textContent = high;
+      ends.append(lowEl, highEl);
+
+      row.append(head, track, ends);
+      return row;
+    }
+
+    // As with the plan, LLM text only goes in through textContent, never innerHTML.
+    function renderMood(mood) {
+      lastMood = mood;
+      moodAxes.replaceChildren(...MOOD_AXES.map((axis) => axisRow(axis, mood[axis.key])));
+      document.getElementById("mood-summary").textContent = mood.summary;
+      document.getElementById("mood-tags").replaceChildren(...mood.tags.map((tag) => {
+        const li = document.createElement("li");
+        li.textContent = tag;
+        return li;
+      }));
+      moodAxes.hidden = false;
+      moodDetails.hidden = false;
+      moodEmpty.hidden = true;
+    }
+
     captureBtn.addEventListener("click", async () => {
       if (!video.videoWidth) return;
       captureBtn.disabled = true;
       try {
         const blob = await grabFrame();
         showSnapshot(blob);
-        setStatus("Sending snapshot…");
-        const info = await postImage("/api/snapshot", blob);
-        setStatus(`Server received ${(info.size_bytes / 1024).toFixed(0)} KB (${info.media_type}).`);
-        // Step 2 continues the pipeline here with the same blob.
+        setStatus("Analysing the mood…");
+        const started = performance.now();
+        const mood = await postImage("/api/mood", blob);
+        renderMood(mood);
+        setStatus(`Mood ready in ${((performance.now() - started) / 1000).toFixed(1)} s.`);
+        // Step 3 continues the pipeline here with `mood` (also kept in lastMood).
       } catch (err) {
         setStatus(err.message, true);
       } finally {
