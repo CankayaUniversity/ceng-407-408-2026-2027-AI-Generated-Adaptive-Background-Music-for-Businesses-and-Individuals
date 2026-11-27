@@ -12,7 +12,7 @@ contracts below, tick it off in the table, and commit it on its own.
 | Step | What | State |
 | --- | --- | --- |
 | 1 | Capture a webcam frame and send it to the server | done |
-| 2 | Mood analysis with an OpenAI-compatible LLM | open |
+| 2 | Mood analysis with an OpenAI-compatible LLM | done |
 | 3 | Prompt planning (5 song prompts) | open |
 | 4 | Generate one track with ElevenLabs, keep the last 5 | open |
 | 5 | Bottom music player | open |

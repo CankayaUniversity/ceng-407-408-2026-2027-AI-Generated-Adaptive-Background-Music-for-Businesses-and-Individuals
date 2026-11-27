@@ -14,6 +14,9 @@ uv sync
 uv run uvicorn demo.main:app --reload
 ```
 
+`.env` is read once when the server starts: restart it after changing a value. `--reload` only
+watches the Python files.
+
 With Docker:
 
 ```bash
