@@ -1,6 +1,7 @@
 """One-page demo of the pipeline: snapshot -> mood -> prompts -> track -> player.
 
-Step 1 serves the page and receives the captured webcam frame; step 2 turns it into a mood.
+Step 1 serves the page and receives the captured webcam frame, step 2 turns it into a mood and
+step 3 plans five song prompts for that mood.
 """
 
 from pathlib import Path
@@ -12,7 +13,7 @@ from pydantic import BaseModel
 from demo.images import read_image
 from demo.llm import ask_json
 from demo.mood import analyze_mood
-from demo.planning import Mood
+from demo.planning import Mood, PromptPlan, plan_prompts
 
 STATIC_DIR = Path(__file__).parent / "static"
 
@@ -41,3 +42,9 @@ async def mood(image: UploadFile) -> Mood:
     """Step 2: the mood of the photographed place, as three axes, a summary and tags."""
     data, media_type = await read_image(image)
     return await analyze_mood(data, media_type, ask_json)
+
+
+@app.post("/api/plan")
+async def plan(mood: Mood) -> PromptPlan:
+    """Step 3: five different song prompts that fit the mood from step 2."""
+    return await plan_prompts(mood, ask_json)

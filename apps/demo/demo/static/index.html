@@ -150,12 +150,8 @@
 
     <section>
       <h2>Prompt planning <span class="step">step 3</span></h2>
-      <p id="plan-empty" class="muted">No plan yet.</p>
+      <p id="plan-empty" class="muted">The plan follows the mood after each capture.</p>
       <ol id="plan-list" class="plan" hidden></ol>
-      <div class="actions">
-        <button id="sample-plan" type="button">Show sample plan</button>
-        <span class="muted">Temporary: fake data until /api/plan exists.</span>
-      </div>
     </section>
 
     <section class="todo">
@@ -222,15 +218,26 @@
       snapshotImg.hidden = false;
     }
 
-    async function postImage(path, blob) {
-      const form = new FormData();
-      form.append("image", blob, "snapshot.jpg");
-      const res = await fetch(path, { method: "POST", body: form });
+    async function readResponse(res) {
       const body = await res.json().catch(() => ({}));
       if (!res.ok) {
         throw new Error(typeof body.detail === "string" ? body.detail : `Request failed (HTTP ${res.status})`);
       }
       return body;
+    }
+
+    async function postImage(path, blob) {
+      const form = new FormData();
+      form.append("image", blob, "snapshot.jpg");
+      return readResponse(await fetch(path, { method: "POST", body: form }));
+    }
+
+    async function postJson(path, data) {
+      return readResponse(await fetch(path, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      }));
     }
 
     // ---- Step 2: mood --------------------------------------------------------
@@ -299,11 +306,18 @@
         const blob = await grabFrame();
         showSnapshot(blob);
         setStatus("Analysing the mood…");
-        const started = performance.now();
+        let started = performance.now();
         const mood = await postImage("/api/mood", blob);
         renderMood(mood);
-        setStatus(`Mood ready in ${((performance.now() - started) / 1000).toFixed(1)} s.`);
-        // Step 3 continues the pipeline here with `mood` (also kept in lastMood).
+        const moodSeconds = ((performance.now() - started) / 1000).toFixed(1);
+
+        setStatus(`Mood ready in ${moodSeconds} s. Planning 5 songs…`);
+        started = performance.now();
+        const plan = await postJson("/api/plan", mood);
+        renderPlan(plan);
+        const planSeconds = ((performance.now() - started) / 1000).toFixed(1);
+        setStatus(`Mood ready in ${moodSeconds} s, plan in ${planSeconds} s.`);
+        // Step 4 continues the pipeline here with plan.prompts[0].
       } catch (err) {
         setStatus(err.message, true);
       } finally {
@@ -314,7 +328,6 @@
     // ---- Step 3: prompt plan -------------------------------------------------
     const planList = document.getElementById("plan-list");
     const planEmpty = document.getElementById("plan-empty");
-    const samplePlanBtn = document.getElementById("sample-plan");
 
     function formatLength(ms) {
       const total = Math.round(ms / 1000);
@@ -341,18 +354,6 @@
       planList.hidden = false;
       planEmpty.hidden = true;
     }
-
-    // Temporary fake data in the same shape /api/plan will return.
-    const SAMPLE_PLAN = {
-      prompts: [
-        { title: "Morning Steam", prompt: "Warm acoustic folk with fingerpicked guitar, soft upright bass and brushed drums at a relaxed 92 BPM, airy and sunlit.", length_ms: 150000, instrumental: true },
-        { title: "Copper Pans", prompt: "Light bossa nova with nylon guitar, soft Rhodes piano and gentle shaker, easy swing around 110 BPM, cheerful and homey.", length_ms: 180000, instrumental: true },
-        { title: "Sunday Kitchen", prompt: "Mellow jazz trio with brushed snare, walking bass and warm piano chords, unhurried tempo near 85 BPM, cozy and intimate.", length_ms: 210000, instrumental: true },
-        { title: "Window Light", prompt: "Gentle indie pop with clean electric guitar, soft synth pads and a steady light kick, about 100 BPM, bright and hopeful.", length_ms: 120000, instrumental: true },
-        { title: "Slow Simmer", prompt: "Soft lo-fi beat with dusty piano, warm vinyl crackle and muted drums at 78 BPM, calm and comforting.", length_ms: 165000, instrumental: true },
-      ],
-    };
-    samplePlanBtn.addEventListener("click", () => renderPlan(SAMPLE_PLAN));
 
     startCamera();
   </script>
