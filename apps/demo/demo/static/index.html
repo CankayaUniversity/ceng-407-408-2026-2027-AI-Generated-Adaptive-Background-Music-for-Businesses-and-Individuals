@@ -70,6 +70,13 @@
     button:disabled { opacity: 0.4; cursor: default; }
     #status { color: var(--muted); }
     #status.error { color: var(--error); }
+    .muted { color: var(--muted); }
+    ol.plan { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 10px; }
+    ol.plan[hidden] { display: none; }
+    ol.plan li { border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; }
+    ol.plan .title { font-weight: 600; }
+    ol.plan .meta { color: var(--muted); font-size: 13px; margin-left: 8px; }
+    ol.plan p { margin: 6px 0 0; }
   </style>
 </head>
 <body>
@@ -101,9 +108,14 @@
       Valence, texture and energy bars, summary and tags.
     </section>
 
-    <section class="todo">
+    <section>
       <h2>Prompt planning <span class="step">step 3</span></h2>
-      Five planned song prompts.
+      <p id="plan-empty" class="muted">No plan yet.</p>
+      <ol id="plan-list" class="plan" hidden></ol>
+      <div class="actions">
+        <button id="sample-plan" type="button">Show sample plan</button>
+        <span class="muted">Temporary: fake data until /api/plan exists.</span>
+      </div>
     </section>
 
     <section class="todo">
@@ -197,6 +209,49 @@
         captureBtn.disabled = false;
       }
     });
+
+    // ---- Step 3: prompt plan -------------------------------------------------
+    const planList = document.getElementById("plan-list");
+    const planEmpty = document.getElementById("plan-empty");
+    const samplePlanBtn = document.getElementById("sample-plan");
+
+    function formatLength(ms) {
+      const total = Math.round(ms / 1000);
+      return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, "0")}`;
+    }
+
+    // Text from the LLM goes in through textContent only, never innerHTML,
+    // so a strange title or prompt can never run as HTML.
+    function renderPlan(plan) {
+      const items = plan.prompts.map((song) => {
+        const li = document.createElement("li");
+        const title = document.createElement("span");
+        title.className = "title";
+        title.textContent = song.title;
+        const meta = document.createElement("span");
+        meta.className = "meta";
+        meta.textContent = `${formatLength(song.length_ms)} · ${song.instrumental ? "instrumental" : "with vocals"}`;
+        const text = document.createElement("p");
+        text.textContent = song.prompt;
+        li.append(title, meta, text);
+        return li;
+      });
+      planList.replaceChildren(...items);
+      planList.hidden = false;
+      planEmpty.hidden = true;
+    }
+
+    // Temporary fake data in the same shape /api/plan will return.
+    const SAMPLE_PLAN = {
+      prompts: [
+        { title: "Morning Steam", prompt: "Warm acoustic folk with fingerpicked guitar, soft upright bass and brushed drums at a relaxed 92 BPM, airy and sunlit.", length_ms: 150000, instrumental: true },
+        { title: "Copper Pans", prompt: "Light bossa nova with nylon guitar, soft Rhodes piano and gentle shaker, easy swing around 110 BPM, cheerful and homey.", length_ms: 180000, instrumental: true },
+        { title: "Sunday Kitchen", prompt: "Mellow jazz trio with brushed snare, walking bass and warm piano chords, unhurried tempo near 85 BPM, cozy and intimate.", length_ms: 210000, instrumental: true },
+        { title: "Window Light", prompt: "Gentle indie pop with clean electric guitar, soft synth pads and a steady light kick, about 100 BPM, bright and hopeful.", length_ms: 120000, instrumental: true },
+        { title: "Slow Simmer", prompt: "Soft lo-fi beat with dusty piano, warm vinyl crackle and muted drums at 78 BPM, calm and comforting.", length_ms: 165000, instrumental: true },
+      ],
+    };
+    samplePlanBtn.addEventListener("click", () => renderPlan(SAMPLE_PLAN));
 
     startCamera();
   </script>
