@@ -305,6 +305,7 @@
       try {
         const blob = await grabFrame();
         showSnapshot(blob);
+        clearPlan();
         setStatus("Analysing the mood…");
         let started = performance.now();
         const mood = await postImage("/api/mood", blob);
@@ -353,6 +354,13 @@
       planList.replaceChildren(...items);
       planList.hidden = false;
       planEmpty.hidden = true;
+    }
+
+    // Empty the list again, so a new capture never shows the previous plan next to a new mood.
+    function clearPlan() {
+      planList.replaceChildren();
+      planList.hidden = true;
+      planEmpty.hidden = false;
     }
 
     startCamera();
